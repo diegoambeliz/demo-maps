@@ -1,0 +1,193 @@
+<html lang="en">
+
+<head>
+        <!-- CSS only -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+        crossorigin="anonymous"></script>
+
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 
+ * Always set the map height explicitly to define the size of the div element
+ * that contains the map. 
+ */
+        #map {
+            height: 100%;
+        }
+
+        /* 
+ * Optional: Makes the sample page fill the window. 
+ */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 25%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: "Roboto", "sans-serif";
+            line-height: 30px;
+            padding-left: 10px;
+        }
+
+        #floating-panel {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            margin-left: -180px;
+            width: 350px;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+        }
+
+        #latlng {
+            width: 225px;
+        }
+
+        form div {
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg" style="background-color: #e3f2fd;">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Demo Maps</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="./ubicarzona.html">Buscador Zona</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="./direction.html">Creador de Rutas</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./elevation.html">Mapa en Relieve</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./streetview.html">Street View</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+    <div id="floating-panel">
+        <input id="latlng" type="text" value="40.714224,-73.961452" />
+        <input  class="btn btn-success" id="submit" type="button" value="Ubicar" />
+    </div>
+    <!-- <div id="map"></div> -->
+
+    <form action="" style="margin-top: 100px;">
+        <div>
+            <label for="zona">Zona</label>
+            <input id="zona" readonly placeholder="Zona" type="text">
+        </div>
+        <div>
+            <label for="municipio">Municipio</label>
+            <input id="municipio" readonly placeholder="Municipio" type="text">
+        </div>
+        <div>
+            <label for="departamento">Departamento</label>
+            <input id="departamento" readonly placeholder="Departamento" type="text">
+        </div>
+        <div>
+            <label for="pais">País</label>
+            <input id="pais" readonly placeholder="País" type="text">
+        </div>
+    </form>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKhtJOJHQdJACQEMEfLBMqo84Ex7Walvc&callback=initMap&v=weekly"
+        defer></script>
+
+    <script>
+        function initMap() {
+            // const map = new google.maps.Map(
+            //     document.getElementById("map"),
+            //     {
+            //         zoom: 8,
+            //         center: { lat: 40.731, lng: -73.997 },
+            //     }
+            // );
+            const geocoder = new google.maps.Geocoder();
+            const infowindow = new google.maps.InfoWindow();
+
+            (document.getElementById("submit")).addEventListener(
+                "click",
+                () => {
+                    geocodeLatLng(geocoder, infowindow);
+                }
+            );
+        }
+
+        function geocodeLatLng(
+            geocoder,
+            infowindow
+        ) {
+            const input = (document.getElementById("latlng")).value;
+            const latlngStr = input.split(",", 2);
+            const latlng = {
+                lat: parseFloat(latlngStr[0]),
+                lng: parseFloat(latlngStr[1]),
+            };
+
+            geocoder
+                .geocode({ location: latlng })
+                .then((response) => {
+                    let data = response.results.filter(x => x.types.includes('political') && x.types.includes('sublocality') && x.types.includes('sublocality_level_1'))[0];
+
+                    if(!data)
+                    {
+                        alert("No se encontró información");
+                        return;
+                    }
+
+                    let address = data.address_components;
+                    console.log(address);
+
+                    let zona = address.filter(x => x.types.includes('political') && x.types.includes('sublocality') && x.types.includes('sublocality_level_1'))[0];
+                    document.querySelector("#zona").value = zona ? zona.long_name : 'Sin información';
+                    let municipio = address.filter(x => x.types.includes('political') && x.types.includes('administrative_area_level_2'))[0];
+                    let municipio2 = address.filter(x => x.types.includes('political') && x.types.includes('locality'))[0];
+                    document.querySelector("#municipio").value = municipio ? municipio.long_name : (municipio2 ? municipio2.long_name : 'Sin información');
+                    let depto = address.filter(x => x.types.includes('political') && x.types.includes('administrative_area_level_1'))[0];
+                    document.querySelector("#departamento").value = depto ? depto.long_name : 'Sin información';
+                    let pais = address.filter(x => x.types.includes('political') && x.types.includes('country'))[0];
+                    document.querySelector("#pais").value = pais ? pais.long_name : 'Sin información';
+                    
+                    // if (response.results.filter(x => x.types.includes('political'))) {
+                    //     console.log(response);
+
+                    // } else {
+                    //     window.alert("No results found");
+                    // }
+                })
+                .catch((e) => window.alert("Geocoder failed due to: " + e));
+        }
+    </script>
+</body>
+
+</html>
